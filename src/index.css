@@ -1,0 +1,169 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    border-color: theme('colors.surface.700');
+  }
+
+  html {
+    /* dark mode is always on — set via class on <html> in index.html */
+  }
+
+  body {
+    @apply bg-surface-950 text-surface-100 font-body antialiased;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(14, 165, 233, 0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-surface-600;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-surface-900/80 backdrop-blur-xl border border-surface-700/50 rounded-xl;
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-200 hover:border-surface-600/70 hover:bg-surface-800/80;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5
+           bg-brand-600 hover:bg-brand-500 text-white font-medium text-sm
+           rounded-lg transition-all duration-200
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5
+           bg-surface-800 hover:bg-surface-700 text-surface-200 font-medium text-sm
+           border border-surface-700 hover:border-surface-600
+           rounded-lg transition-all duration-200
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5
+           bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 font-medium text-sm
+           border border-rose-500/30 hover:border-rose-500/50
+           rounded-lg transition-all duration-200
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-3 py-2
+           text-surface-400 hover:text-surface-200 hover:bg-surface-800/60
+           rounded-lg transition-all duration-200 text-sm;
+  }
+
+  .input-field {
+    @apply w-full bg-surface-900 border border-surface-700 text-surface-100
+           placeholder-surface-500 rounded-lg px-3.5 py-2.5 text-sm
+           focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/50
+           transition-all duration-200;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-surface-300 mb-1.5;
+  }
+
+  .stat-card {
+    @apply glass-card p-5 flex flex-col gap-3;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border;
+  }
+
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+           text-surface-400 hover:text-surface-100 hover:bg-surface-800/60
+           transition-all duration-200 cursor-pointer select-none;
+  }
+
+  .nav-item-active {
+    @apply text-brand-400 bg-brand-500/10 border border-brand-500/20;
+  }
+
+  .page-header {
+    @apply mb-6;
+  }
+
+  .page-title {
+    @apply text-2xl font-display font-bold text-surface-50 tracking-tight;
+  }
+
+  .page-subtitle {
+    @apply text-sm text-surface-500 mt-1;
+  }
+
+  .divider {
+    @apply border-t border-surface-800;
+  }
+
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      theme('colors.surface.800') 0%,
+      theme('colors.surface.700') 50%,
+      theme('colors.surface.800') 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+    border-radius: 4px;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-brand-400 to-violet-400 bg-clip-text text-transparent;
+  }
+
+  .drag-active {
+    @apply border-brand-500 bg-brand-500/5;
+  }
+}
+
+/* Scrollbar for virtualized lists */
+.virtual-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+/* Progress bar indeterminate */
+@keyframes progress-indeterminate {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
+.progress-indeterminate {
+  animation: progress-indeterminate 1.5s ease-in-out infinite;
+}
+
+/* Shimmer keyframe */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* Electron drag region */
+.titlebar-drag    { -webkit-app-region: drag; }
+.titlebar-no-drag { -webkit-app-region: no-drag; }
