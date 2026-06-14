@@ -38,19 +38,15 @@ export const JOB_STATUS_BG: Record<string, string> = {
   cancelled: 'bg-surface-700/50 text-surface-400 border-surface-600/30',
 };
 
-export const GEMINI_MODELS = [
-  { value: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash' },
-  { value: 'gemini-3.1-flash-image', label: 'Gemini 3.1 Flash Image' },
-  { value: 'gemini-3.1-pro-image', label: 'Gemini 3.1 Pro Image' },
-  { value: 'gemini-2.5-flash-image', label: 'Gemini 2.5 Flash Image' },
+// خليناهم الاتنين Imagen عشان الواجهة متضربش سواء قرأت من دي أو دي
+export const IMAGE_GENERATION_MODELS = [
+  { value: 'imagen-3.0-generate-002', label: 'Imagen 3.0 (Generate & Edit)' }
 ];
 
-/** Models supported on Vertex AI */
+export const GEMINI_MODELS = IMAGE_GENERATION_MODELS;
+
 export const VERTEX_MODELS = [
-  { value: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash' },
-  { value: 'gemini-3.1-flash-image', label: 'Gemini 3.1 Flash Image' },
-  { value: 'gemini-3.1-pro-image', label: 'Gemini 3.1 Pro Image' },
-  { value: 'gemini-2.5-flash-image', label: 'Gemini 2.5 Flash Image' },
+  { value: 'imagen-3.0-generate-002', label: 'Imagen 3.0 (Generate & Edit)' }
 ];
 
 export const VERTEX_LOCATIONS = [

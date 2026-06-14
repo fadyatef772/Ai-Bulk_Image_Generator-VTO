@@ -79,7 +79,6 @@ function CogIcon() {
 // ── Provider Tab Button ───────────────────────────────────────────────────
 
 interface ProviderTabProps {
-  id: ApiProvider;
   active: boolean;
   label: string;
   icon: React.ReactNode;
@@ -87,7 +86,7 @@ interface ProviderTabProps {
   onClick: () => void;
 }
 
-function ProviderTab({ id, active, label, icon, accentClass, onClick }: ProviderTabProps) {
+function ProviderTab({ active, label, icon, accentClass, onClick }: ProviderTabProps) {
   return (
     <button
       type="button"
@@ -247,7 +246,6 @@ export function SettingsPage() {
 
           <div className="flex flex-wrap gap-2">
             <ProviderTab
-              id="gemini"
               active={activeProvider === 'gemini'}
               label="Gemini API"
               icon={<GeminiIcon />}
@@ -255,7 +253,6 @@ export function SettingsPage() {
               onClick={() => setProvider('gemini')}
             />
             <ProviderTab
-              id="vertex"
               active={activeProvider === 'vertex'}
               label="Vertex AI"
               icon={<VertexIcon />}
@@ -263,7 +260,6 @@ export function SettingsPage() {
               onClick={() => setProvider('vertex')}
             />
             <ProviderTab
-              id="dust"
               active={activeProvider === 'dust'}
               label="Dust.tt"
               icon={<DustIcon />}

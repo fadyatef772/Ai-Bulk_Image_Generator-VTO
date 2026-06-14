@@ -1,10 +1,31 @@
 node_modules/
 dist/
+build/
 release/
 output/
 logs/
+coverage/
+
+# Environments
 .env
-settings.json
+.env.local
+.env.production
 *.local
+
+# Secrets and Credentials
+*.pem
+*.key
+credentials.json
+service-account.json
+settings.json
+
+# Cache and Temp
+.cache/
+temp/
+tmp/
+.temp/
+.tmp/
+
+# OS Files
 .DS_Store
 Thumbs.db

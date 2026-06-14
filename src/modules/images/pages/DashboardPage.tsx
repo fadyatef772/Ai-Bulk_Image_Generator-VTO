@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useQueueStore } from '../../../app/store/queueStore';
 import { useAppStore } from '../../../app/store/appStore';
 import { StatCard, ProgressBar, EmptyState } from '../../../shared/components/UI';
-import { api, formatDuration, formatETA } from '../../../shared/utils/api';
+import { api, formatETA } from '../../../shared/utils/api';
 import { QueueStats } from '../../../shared/types';
 
 function ImagesIcon() {

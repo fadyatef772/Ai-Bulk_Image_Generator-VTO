@@ -1,3 +1,4 @@
+import { GoogleAuth } from 'google-auth-library';
 import {
   IImageGenerationService,
   ImageGenerationRequest,
@@ -6,30 +7,59 @@ import {
 } from '../../domain/interfaces/index';
 import { GeminiError } from '../../application/errors/AppErrors';
 
+/**
+ * Image generation, editing, and analysis via Vertex AI (Google Cloud).
+ *
+ * ─── Authentication (ADC via google-auth-library) — DO NOT MODIFY ───────
+ * Uses GoogleAuth with the cloud-platform scope. This relies on
+ * Application Default Credentials configured via:
+ * gcloud auth application-default login
+ * ──────────────────────────────────────────────────────────────────────
+ */
+
+/**
+ * Model used for VTO Step A (product analysis). Confirmed available on
+ * Vertex AI for this project via :generateContent with image input +
+ * text output (multimodal input -> text output is standard; do NOT
+ * request responseModalities: ['IMAGE'] with this model, it will 400).
+ */
+const MODEL_GEMINI_ANALYSIS = 'gemini-2.5-flash';
+
+const ANALYZE_PRODUCT_PROMPT = `You are a senior e-commerce product photographer and copywriter.
+Look closely at the product in this image and produce a single, dense paragraph
+describing it in highly visual, technical detail so it can be used verbatim as
+part of an AI image-generation prompt. Include:
+- Product category and exact shape/silhouette
+- Materials and textures (e.g. matte leather, brushed metal, glossy plastic)
+- Colors (be specific: "cream beige" not just "white")
+- Notable design details (stitching, hardware, logos, patterns, straps, soles)
+- Proportions and distinguishing features
+Do not describe the background. Do not add commentary, headers, or markdown —
+output only the descriptive paragraph.`;
+
 export class VertexGeminiService implements IImageGenerationService {
   constructor(private readonly logger: ILoggerService) {}
 
   private get projectId(): string {
-    return process.env.VERTEX_PROJECT_ID || '';
+    return (process.env.VERTEX_PROJECT_ID || '').trim();
   }
 
   private get location(): string {
-    return process.env.VERTEX_LOCATION || 'us-central1';
+    return (process.env.VERTEX_LOCATION || 'us-central1').trim();
   }
+
+  // ── Token resolution (google-auth-library) ───────────────────
+
+  private auth = new GoogleAuth({
+    scopes: 'https://www.googleapis.com/auth/cloud-platform',
+  });
 
   private async getAccessToken(): Promise<string> {
     try {
-      const adcToken = await this.getTokenFromAdcFile();
-      if (adcToken) return adcToken;
+      const token = await this.auth.getAccessToken();
+      if (token) return token;
     } catch (err) {
-      this.logger.debug('ADC file not found or unreadable — trying metadata server', {});
-    }
-
-    try {
-      const metaToken = await this.getTokenFromMetadataServer();
-      if (metaToken) return metaToken;
-    } catch {
-      // Not on GCP infra
+      this.logger.error('Vertex AI: Failed to retrieve access token via google-auth-library', err as Error);
     }
 
     throw new GeminiError(
@@ -38,102 +68,12 @@ export class VertexGeminiService implements IImageGenerationService {
     );
   }
 
-  private async getTokenFromAdcFile(): Promise<string | null> {
-    const { readFile } = await import('fs/promises');
-    const { homedir } = await import('os');
-    const { join } = await import('path');
+  // ── Image generation & Editing (Imagen 3 Predict API) ────────
 
-    const adcPath = join(homedir(), '.config', 'gcloud', 'application_default_credentials.json');
-
-    let adcRaw: string;
-    try {
-      adcRaw = await readFile(adcPath, 'utf-8');
-    } catch {
-      return null;
-    }
-
-    const adc = JSON.parse(adcRaw) as AdcFile;
-
-    if (adc.type === 'authorized_user') {
-      return this.refreshUserToken(adc);
-    }
-
-    if (adc.type === 'impersonated_service_account') {
-      const userToken = await this.refreshUserToken(adc.source_credentials);
-      return this.impersonateServiceAccount(adc.service_account_impersonation_url, userToken);
-    }
-
-    return null;
-  }
-
-  private async refreshUserToken(creds: AuthorizedUserCreds): Promise<string> {
-    const body = new URLSearchParams({
-      client_id:     creds.client_id,
-      client_secret: creds.client_secret,
-      refresh_token: creds.refresh_token,
-      grant_type:    'refresh_token',
-    });
-
-    const resp = await fetch('https://oauth2.googleapis.com/token', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body,
-      signal: AbortSignal.timeout(10_000),
-    });
-
-    if (!resp.ok) {
-      const err = await resp.text();
-      throw new GeminiError(`OAuth2 token refresh failed (${resp.status}): ${err}`);
-    }
-
-    const json = (await resp.json()) as { access_token: string };
-    return json.access_token;
-  }
-
-  private async impersonateServiceAccount(
-    impersonationUrl: string,
-    userAccessToken: string,
-  ): Promise<string> {
-    const resp = await fetch(impersonationUrl, {
-      method:  'POST',
-      headers: {
-        Authorization:  `Bearer ${userAccessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body:   JSON.stringify({ scope: ['https://www.googleapis.com/auth/cloud-platform'] }),
-      signal: AbortSignal.timeout(10_000),
-    });
-
-    if (!resp.ok) {
-      const err = await resp.text();
-      if (resp.status === 401 || resp.status === 403) {
-        throw new GeminiError(
-          `SA impersonation failed (${resp.status}). ` +
-          'Ensure your user account has roles/iam.serviceAccountTokenCreator on the SA.'
-        );
-      }
-      throw new GeminiError(`SA impersonation error (${resp.status}): ${err}`);
-    }
-
-    const json = (await resp.json()) as { accessToken: string };
-    return json.accessToken;
-  }
-
-  private async getTokenFromMetadataServer(): Promise<string | null> {
-    const resp = await fetch(
-      'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token',
-      {
-        headers: { 'Metadata-Flavor': 'Google' },
-        signal:  AbortSignal.timeout(3_000),
-      }
-    );
-    if (!resp.ok) return null;
-    const json = (await resp.json()) as { access_token: string };
-    return json.access_token;
-  }
+  // ── Image generation & Editing (Imagen 3 & Imagen 2) ────────
 
   async generateImage(request: ImageGenerationRequest): Promise<ImageGenerationResponse> {
-    const { imageBuffer, mimeType, prompt, model } = request;
+    const { prompt, baseImageBase64, maskImageBase64 } = request;
 
     if (!this.projectId) {
       throw new GeminiError(
@@ -141,8 +81,12 @@ export class VertexGeminiService implements IImageGenerationService {
       );
     }
 
-    this.logger.info('Starting Vertex AI image generation', {
-      model,
+    // التوجيه الذكي: Imagen 2 للتعديل (لأنه الأكثر استقراراً للدمج)، و Imagen 3 للتوليد
+    const MODEL_ID = baseImageBase64 ? 'imagegeneration@006' : 'imagen-3.0-generate-002';
+    const operationType = baseImageBase64 ? 'Editing/Inpainting' : 'Generation';
+
+    this.logger.info(`Starting Vertex AI (Imagen) image ${operationType}`, {
+      model:     MODEL_ID,
       projectId: this.projectId,
       location:  this.location,
     });
@@ -154,17 +98,124 @@ export class VertexGeminiService implements IImageGenerationService {
         `https://${this.location}-aiplatform.googleapis.com/v1` +
         `/projects/${this.projectId}` +
         `/locations/${this.location}` +
-        `/publishers/google/models/${model || 'gemini-2.0-flash-exp'}:generateContent`;
+        `/publishers/google/models/${MODEL_ID}:predict`;
+
+      // بناء الـ Payload بالشكل القياسي الصارم المعتمد من جوجل
+      const instance: any = { prompt };
+      const parameters: any = { sampleCount: 1 };
+
+      if (baseImageBase64) {
+        instance.image = { bytesBase64Encoded: baseImageBase64 };
+        
+        // التعديل المصيري: الماسك مكانه الصحيح داخل الـ instance
+        if (maskImageBase64) {
+          instance.mask = {
+            image: { bytesBase64Encoded: maskImageBase64 }
+          };
+          // تحديد نوع العملية داخل الـ parameters
+          parameters.editConfig = {
+            editMode: 'INPAINT_INSERTION'
+          };
+        }
+      }
+
+      const payload = { instances: [instance], parameters };
+
+      const resp = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(60_000),
+      });
+
+      if (!resp.ok) {
+        const errText = await resp.text();
+        this.logger.error('Vertex AI Imagen API error', undefined, {
+          status: resp.status,
+          body: errText,
+        });
+        if (resp.status === 401 || resp.status === 403) {
+          throw new GeminiError(`Vertex AI authentication failed. Details: ${errText}`);
+        }
+        throw new GeminiError(`Vertex AI API error (${resp.status}): ${errText.slice(0, 500)}`);
+      }
+
+      const json = (await resp.json()) as VertexPredictResponse;
+      const prediction = json.predictions?.[0];
+
+      if (!prediction?.bytesBase64Encoded) {
+        throw new GeminiError('Vertex AI did not return an image in the response.');
+      }
+
+      const resultImageBuffer = Buffer.from(prediction.bytesBase64Encoded, 'base64');
+      const resultMimeType = prediction.mimeType || 'image/png';
+
+      this.logger.info('Vertex AI image generation successful', {
+        outputSize: resultImageBuffer.length,
+        outputMimeType: resultMimeType,
+      });
+
+      return { imageBuffer: resultImageBuffer, mimeType: resultMimeType };
+    } catch (error) {
+      if (error instanceof GeminiError) throw error;
+      const err = error as Error;
+      this.logger.error('Vertex AI error', err);
+      throw new GeminiError(`Vertex AI error: ${err.message}`);
+    }
+  }
+
+  // ── VTO Step A: Product analysis via Vertex AI (Gemini, ADC auth) ────────
+
+  /**
+   * Sends the product image to Gemini (on Vertex AI, via the SAME ADC
+   * credentials used by generateImage) and returns a single dense
+   * paragraph describing it in visual/technical detail.
+   *
+   * IMPORTANT: This intentionally does NOT use the direct Gemini API
+   * (@google/generative-ai + GEMINI_API_KEY). That path is unreliable
+   * here because GEMINI_API_KEY in .env is not a valid Generative
+   * Language API key, causing every call to fail and silently fall back
+   * to a generic "consumer good" description — which produces unrelated
+   * output images (e.g. a shoe upload generating a jar/bottle photo).
+   *
+   * On failure this THROWS (no silent generic fallback), so a bad
+   * description never silently corrupts the rest of the pipeline.
+   */
+  async analyzeProduct(imageBase64: string, mimeType: string = 'image/png'): Promise<string> {
+    if (!this.projectId) {
+      throw new GeminiError(
+        'Vertex AI Project ID not configured. Set VERTEX_PROJECT_ID in your .env file.'
+      );
+    }
+
+    this.logger.info('VTO Step A: analyzing product image via Vertex AI', {
+      model: MODEL_GEMINI_ANALYSIS,
+      projectId: this.projectId,
+      location: this.location,
+      mimeType,
+    });
+
+    try {
+      const accessToken = await this.getAccessToken();
+
+      const endpoint =
+        `https://${this.location}-aiplatform.googleapis.com/v1` +
+        `/projects/${this.projectId}` +
+        `/locations/${this.location}` +
+        `/publishers/google/models/${MODEL_GEMINI_ANALYSIS}:generateContent`;
 
       const body = {
         contents: [{
-          role:  'user',
+          role: 'user',
           parts: [
-            { text: prompt },
-            { inlineData: { mimeType, data: imageBuffer.toString('base64') } },
+            { text: ANALYZE_PRODUCT_PROMPT },
+            { inlineData: { mimeType, data: imageBase64 } },
           ],
         }],
-        generationConfig: { responseModalities: ['TEXT', 'IMAGE'] },
+        generationConfig: { responseModalities: ['TEXT'] },
       };
 
       const resp = await fetch(endpoint, {
@@ -174,112 +225,87 @@ export class VertexGeminiService implements IImageGenerationService {
           'Content-Type': 'application/json',
         },
         body:   JSON.stringify(body),
-        signal: AbortSignal.timeout(180_000),
+        signal: AbortSignal.timeout(120_000),
       });
 
       if (!resp.ok) {
         const errText = await resp.text();
-        this.logger.error('Vertex AI HTTP error', undefined, {
+        this.logger.error('VTO Step A failed: Gemini analysis HTTP error', undefined, {
           status: resp.status,
-          body:   errText.slice(0, 400),
+          body: errText.slice(0, 400),
         });
-
         if (resp.status === 401 || resp.status === 403) {
+          throw new GeminiError(`Vertex AI authentication failed. Details: ${errText.slice(0, 300)}`);
+        }
+        if (resp.status === 404) {
           throw new GeminiError(
-            'Vertex AI authentication failed. Run:\n' +
-            '  gcloud auth application-default login'
+            `Vertex AI model ${MODEL_GEMINI_ANALYSIS} not found for analysis. ` +
+            `Check your project ID and location. Details: ${errText.slice(0, 300)}`
           );
         }
-        if (resp.status === 429) {
-          throw new GeminiError('Vertex AI rate limit exceeded. Please wait and retry.');
-        }
-        throw new GeminiError(`Vertex AI error ${resp.status}: ${errText.slice(0, 300)}`);
+        throw new GeminiError(`Gemini analysis error (${resp.status}): ${errText.slice(0, 500)}`);
       }
 
-      const data = (await resp.json()) as VertexResponse;
+      const data = (await resp.json()) as GeminiGenerateContentResponse;
 
-      let resultImageBuffer: Buffer | null = null;
-      let resultMimeType = 'image/png';
+      const text = (data.candidates || [])
+        .flatMap(c => c.content?.parts || [])
+        .map(p => p.text)
+        .filter(Boolean)
+        .join(' ')
+        .trim();
 
-      for (const candidate of data.candidates || []) {
-        for (const part of candidate.content?.parts || []) {
-          if (part.inlineData?.mimeType?.startsWith('image/')) {
-            resultImageBuffer = Buffer.from(part.inlineData.data, 'base64');
-            resultMimeType    = part.inlineData.mimeType;
-            break;
-          }
-        }
-        if (resultImageBuffer) break;
+      if (!text) {
+        throw new GeminiError('VTO Step A: Gemini returned no description text.');
       }
 
-      if (!resultImageBuffer) {
-        const textParts = (data.candidates || [])
-          .flatMap(c => c.content?.parts || [])
-          .map(p => p.text)
-          .filter(Boolean)
-          .join(' ');
-        throw new GeminiError(
-          `Vertex AI did not return an image. Response: ${(textParts || 'empty').slice(0, 200)}`
-        );
-      }
-
-      this.logger.info('Vertex AI image generation successful', {
-        outputSize:     resultImageBuffer.length,
-        outputMimeType: resultMimeType,
+      this.logger.info('VTO Step A complete: product description generated', {
+        descriptionLength: text.length,
+        descriptionPreview: text.slice(0, 120),
       });
 
-      return {
-        imageBuffer: resultImageBuffer,
-        mimeType:    resultMimeType,
-        tokensUsed:  data.usageMetadata?.totalTokenCount,
-      };
+      return text;
 
     } catch (error) {
       if (error instanceof GeminiError) throw error;
       const err = error as Error;
-      this.logger.error('Vertex AI error', err);
-      throw new GeminiError(`Vertex AI error: ${err.message}`);
+      this.logger.error('VTO Step A error', err);
+      throw new GeminiError(`Product analysis error: ${err.message}`);
     }
   }
 
-  async validateCredentials(): Promise<boolean> {
-    if (!this.projectId) return false;
-    try {
-      const token = await this.getAccessToken();
-      const resp = await fetch(
-        `https://oauth2.googleapis.com/tokeninfo?access_token=${token}`,
-        { signal: AbortSignal.timeout(8_000) }
-      );
-      return resp.ok;
-    } catch {
-      return false;
-    }
+  // ── Public helpers for VirtualTryOnService ───────────────────────────────
+
+  /** Expose ADC token so VirtualTryOnService can reuse the same auth */
+  async getToken(): Promise<string> {
+    return this.getAccessToken();
+  }
+
+  getProjectId(): string {
+    return (process.env.VERTEX_PROJECT_ID || '').trim();
+  }
+
+  getLocation(): string {
+    return (process.env.VERTEX_LOCATION || 'us-central1').trim();
   }
 }
 
-interface AuthorizedUserCreds {
-  client_id:     string;
-  client_secret: string;
-  refresh_token: string;
+// ── Vertex AI API response types ────────────────────────────────────────────
+
+interface VertexPredictResponse {
+  predictions?: Array<{
+    bytesBase64Encoded: string;
+    mimeType?: string;
+  }>;
 }
 
-interface AdcFile {
-  type: 'authorized_user' | 'impersonated_service_account';
-  client_id?:     string;
-  client_secret?: string;
-  refresh_token?: string;
-  service_account_impersonation_url?: string;
-  source_credentials?: AuthorizedUserCreds;
-}
-
-interface VertexResponse {
+interface GeminiGenerateContentResponse {
   candidates?: Array<{
     content?: {
       parts?: Array<{
-        text?:       string;
+        text?: string;
         inlineData?: { mimeType: string; data: string };
       }>;
     };
   }>;
-  usageMetadata?: { totalTokenCount?: number };
 }
