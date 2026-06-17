@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
     os.makedirs(serve_dir, exist_ok=True)
     app.mount("/output", StaticFiles(directory=serve_dir), name="output")
 
-    container.logger.info(f"Server running on http://localhost:{container.config.PORT}", {
+    container.logger.info(f"Server running on port {container.config.PORT}", {
         "env": container.config.NODE_ENV, "port": container.config.PORT,
     })
     try:

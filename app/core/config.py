@@ -32,7 +32,8 @@ class AppConfig(BaseSettings):
     GEMINI_API_KEY: str = ""
 
     # Vertex AI — auth is ADC-based (Application Default Credentials)
-    VERTEX_PROJECT_ID: str = "ai-bulk-image-generator-498616"
+    # Override via env VERTEX_PROJECT_ID — the default is a dev placeholder.
+    VERTEX_PROJECT_ID: str = ""
     VERTEX_LOCATION: str = "us-central1"
 
     # Dust.tt
@@ -61,7 +62,8 @@ class AppConfig(BaseSettings):
     # VTO (Virtual Try-On) — Vertex model id
     VTO_MODEL: str = "virtual-try-on-001"
 
-    # CORS
+    # CORS — comma-separated. Override in production via env:
+    #   CORS_ORIGINS=https://your-app.vercel.app
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3001"
 
     @property

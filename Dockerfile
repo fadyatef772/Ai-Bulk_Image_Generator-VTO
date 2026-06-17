@@ -1,5 +1,5 @@
 # ── AI Bulk Image Generator — Python backend ────────────────────────────────
-FROM python:3.13-slim
+FROM python:3.11-slim
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1
@@ -21,7 +21,7 @@ COPY .env.example ./.env.example
 RUN useradd -m appuser && mkdir -p /app/output /app/logs && chown -R appuser:appuser /app
 USER appuser
 
-EXPOSE 3001
+EXPOSE 8080
 
-# Default: run API + in-process worker pool.
+# Cloud Run sets PORT=8080; fallback also 8080 for local dev.
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
