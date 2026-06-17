@@ -1,5 +1,5 @@
 # ── AI Bulk Image Generator — Python backend ────────────────────────────────
-FROM python:3.11-bookworm
+FROM python:3.13-slim
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1
