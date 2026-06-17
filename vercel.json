@@ -1,6 +1,6 @@
 {
-  "framework": "vite",
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "installCommand": "npm install"
+  "framework": null,
+  "buildCommand": "npm --prefix ai-bulk-frontend run build",
+  "outputDirectory": "ai-bulk-frontend/dist",
+  "installCommand": "npm --prefix ai-bulk-frontend install"
 }
