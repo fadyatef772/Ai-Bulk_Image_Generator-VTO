@@ -1,14 +1,14 @@
-export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ??
-  'https://ai-bulk-python-831941147023.us-central1.run.app/api';
+function requireEnv(key: string): string {
+  const value = import.meta.env[key] as string | undefined;
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${key}`);
+  }
+  return value;
+}
 
-export const SSE_URL =
-  import.meta.env.VITE_SSE_URL ??
-  'https://ai-bulk-python-831941147023.us-central1.run.app/api/events';
-
-export const OUTPUT_STATIC_URL =
-  import.meta.env.VITE_OUTPUT_STATIC_URL ??
-  'https://ai-bulk-python-831941147023.us-central1.run.app/output';
+export const API_BASE_URL = requireEnv('VITE_API_BASE_URL');
+export const SSE_URL = requireEnv('VITE_SSE_URL');
+export const OUTPUT_STATIC_URL = requireEnv('VITE_OUTPUT_STATIC_URL');
 
 export const ALLOWED_FILE_TYPES = [
   'image/jpeg',
