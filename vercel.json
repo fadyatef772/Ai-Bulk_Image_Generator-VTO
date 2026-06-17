@@ -1,3 +1,5 @@
 {
-  "framework": null
+  "installCommand": "cd ai-bulk-frontend && npm install",
+  "buildCommand": "cd ai-bulk-frontend && npm run build",
+  "outputDirectory": "ai-bulk-frontend/dist"
 }
