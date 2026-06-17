@@ -1,0 +1,51 @@
+services:
+  api:
+    build: .
+    container_name: ai-bulk-api
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+      - API_PROVIDER=${API_PROVIDER:-gemini}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - VERTEX_PROJECT_ID=${VERTEX_PROJECT_ID:-}
+      - VERTEX_LOCATION=${VERTEX_LOCATION:-us-central1}
+      - VTO_MODEL=${VTO_MODEL:-virtual-try-on-001}
+      - DUST_API_KEY=${DUST_API_KEY:-}
+      - DUST_WORKSPACE_ID=${DUST_WORKSPACE_ID:-}
+      - DUST_AGENT_ID=${DUST_AGENT_ID:-}
+      - QUEUE_BACKEND=${QUEUE_BACKEND:-memory}
+      - QUEUE_CONCURRENCY=${QUEUE_CONCURRENCY:-3}
+      - QUEUE_MAX_RETRIES=${QUEUE_MAX_RETRIES:-3}
+      - QUEUE_RETRY_DELAY=${QUEUE_RETRY_DELAY:-5000}
+      - OUTPUT_DIR=/app/output
+      - LOG_DIR=/app/logs
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./output:/app/output
+      - ./logs:/app/logs
+      # Mount host ADC for Vertex AI (read-only). Comment out if not using Vertex.
+      - ${HOME}/.config/gcloud:/home/appuser/.config/gcloud:ro
+    restart: unless-stopped
+    depends_on:
+      - redis
+
+  # Optional — only required when QUEUE_BACKEND=redis (queue scaling across
+  # multiple worker processes). The default in-memory pool does not need it.
+  redis:
+    image: redis:7-alpine
+    container_name: ai-bulk-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  # Optional dedicated worker service example (horizontal scaling). With the
+  # in-memory backend each instance runs an independent pool; switch
+  # QUEUE_BACKEND=redis to share one queue across these replicas.
+  # worker:
+  #   build: .
+  #   command: ["python", "-m", "app.worker"]
+  #   environment: *same-as-api
+  #   depends_on: [redis]

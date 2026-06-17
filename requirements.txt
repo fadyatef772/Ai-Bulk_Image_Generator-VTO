@@ -1,0 +1,20 @@
+# ── Web framework ───────────────────────────────────────────────────────────
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+
+# ── Validation / config ─────────────────────────────────────────────────────
+pydantic==2.10.4
+pydantic-settings==2.7.1
+
+# ── Async IO ────────────────────────────────────────────────────────────────
+aiofiles==24.1.0
+httpx==0.28.1
+
+# ── AI providers ────────────────────────────────────────────────────────────
+google-generativeai==0.8.3          # Gemini (direct)
+google-cloud-aiplatform==1.75.0     # Vertex AI SDK: Imagen 3 + Virtual Try-On
+google-auth==2.37.0                 # ADC credential resolution
+
+# ── Optional: Redis-backed queue scaling (QUEUE_BACKEND=redis) ───────────────
+redis==5.2.1

@@ -1,0 +1,15 @@
+{
+  "apiProvider": "gemini",
+  "geminiApiKey": "",
+  "vertexProjectId": "ai-bulk-image-generator-498616",
+  "vertexLocation": "us-central1",
+  "dustApiKey": "",
+  "dustWorkspaceId": "",
+  "dustAgentId": "",
+  "outputFolder": "",
+  "concurrentWorkers": 3,
+  "retryCount": 3,
+  "timeoutMs": 120000,
+  "imageQuality": 90,
+  "model": "gemini-2.0-flash-exp"
+}

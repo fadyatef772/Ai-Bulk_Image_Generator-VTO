@@ -1,0 +1,7 @@
+venv/
+output/
+logs/
+__pycache__/
+*.pyc
+.git/
+ai-bulk-frontend/node_modules/
