@@ -1,0 +1,6 @@
+# Ignore Python backend — Vercel builds frontend only
+requirements.txt
+app/
+Dockerfile
+.python-version
+venv/

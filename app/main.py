@@ -57,7 +57,8 @@ def create_app() -> FastAPI:
         allow_origin_regex=r"https://.*\.vercel\.app",
         allow_origins=[
             "http://localhost:5173",
-            "http://localhost:3001"
+            "http://localhost:3001",
+            "https://ai-bulk-frontend-5gekuxzal-ai-bulk-image-gen.vercel.app",
         ],
         allow_credentials=True,
         allow_methods=["*"],
