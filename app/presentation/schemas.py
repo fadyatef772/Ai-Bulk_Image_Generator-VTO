@@ -36,7 +36,7 @@ class ValidateKeySchema(BaseModel):
 
 
 class SelectFolderSchema(BaseModel):
-    folder: str = Field(min_length=1)
+    folder: Optional[str] = None
 
 
 class VTOSchema(BaseModel):

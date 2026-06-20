@@ -99,8 +99,13 @@ async def validate_key(body: ValidateKeySchema):
 @router.post("/select-folder")
 async def select_folder(body: SelectFolderSchema):
     c = get_container()
-    await c.filesystem.ensure_directory_structure(body.folder)
-    return {"success": True, "data": {"folder": body.folder}}
+    folder = body.folder
+    if folder is None:
+        settings = await c.settings_repository.get()
+        folder = settings.outputFolder or ""
+    if folder:
+        await c.filesystem.ensure_directory_structure(folder)
+    return {"success": True, "data": {"folder": folder}}
 
 
 @router.post("/open-folder")
