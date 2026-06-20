@@ -82,9 +82,10 @@ export const api = {
   updateSettings: (patch: Partial<AppSettings>) => http.put<AppSettings>('/settings', patch),
   validateKey: (provider: string, key: string) =>
     http.post<{ isValid: boolean }>('/settings/validate-key', { provider, apiKey: key }),
-  selectFolder: () => http.post<{ folder: string }>('/settings/select-folder'),
-  openFolder: () => http.post<null>('/settings/open-folder'),
-
+  selectFolder: (folder: string) =>
+  http.post<{ folder: string }>('/settings/select-folder', {
+    folder,
+  }),
   // Health
   health: () => http.get<{ status: string }>('/health'),
 };

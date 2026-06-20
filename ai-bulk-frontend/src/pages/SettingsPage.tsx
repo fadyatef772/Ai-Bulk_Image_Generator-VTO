@@ -271,9 +271,11 @@ export function SettingsPage() {
                 <Button
                   variant="secondary"
                   onClick={async () => {
-                    const res = await api.selectFolder();
-                    if (res.success && res.data?.folder) set('outputFolder', res.data.folder);
-                  }}
+                    const res = await api.selectFolder(form.outputFolder);
+                    if (res.success && res.data?.folder) {
+                     set('outputFolder', res.data.folder);
+                   }
+                }}
                 >
                   <FolderOpen className="h-4 w-4" />
                   Browse
