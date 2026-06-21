@@ -32,11 +32,10 @@ async def lifespan(app: FastAPI):
     await container.startup()
 
     # Serve generated output images statically at /output (server.ts static mount).
-    # Prefer the configured output folder if it exists, else the env OUTPUT_DIR.
-    persisted = await container.settings_repository.get()
-    serve_dir = persisted.outputFolder or container.config.OUTPUT_DIR
-    os.makedirs(serve_dir, exist_ok=True)
-    app.mount("/output", StaticFiles(directory=serve_dir), name="output")
+    # Always use the configured OUTPUT_DIR so the mount matches where the
+    # queue actually saves generated images (both default to the same env var).
+    os.makedirs(container.config.OUTPUT_DIR, exist_ok=True)
+    app.mount("/output", StaticFiles(directory=container.config.OUTPUT_DIR), name="output")
 
     container.logger.info(f"Server running on port {container.config.PORT}", {
         "env": container.config.NODE_ENV, "port": container.config.PORT,
