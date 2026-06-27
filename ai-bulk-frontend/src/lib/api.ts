@@ -63,6 +63,19 @@ export const api = {
       sampleCount,
       baseSteps,
     }),
+
+  // Mockup — single (instant ghost-mannequin result)
+  mockup: (image: string, garmentType = '') =>
+    http.post<{ image: string; mimeType: string; dataUrl: string }>('/mockup', {
+      image,
+      garmentType,
+    }),
+  // Mockup — bulk (queued, processed by the worker pool)
+  mockupBulk: (images: Array<{ name: string; data: string }>, garmentType = '') =>
+    http.post<UploadResult & { provider: string; model: string }>('/mockup/bulk', {
+      images,
+      garmentType,
+    }),
   getGallery: (q: GalleryQuery = {}) =>
     http.get<GalleryResponse>(`/images${buildGalleryQuery(q)}`),
   deleteJob: (id: string) => http.delete<{ id: string }>(`/images/${id}`),

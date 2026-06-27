@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from typing import Any, Literal
 
-ApiProvider = Literal["gemini", "vertex", "dust"]
+ApiProvider = Literal["gemini", "vertex", "dust", "mockup"]
 
 
 @dataclass

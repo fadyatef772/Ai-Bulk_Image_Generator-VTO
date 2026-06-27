@@ -23,7 +23,7 @@ from app.presentation.middleware import (
     not_found_handler,
     unhandled_error_handler,
 )
-from app.presentation.routers import events, health, images, queue, settings, vto
+from app.presentation.routers import events, health, images, mockup, queue, settings, vto
 
 
 @asynccontextmanager
@@ -74,6 +74,7 @@ def create_app() -> FastAPI:
     app.include_router(queue.router)
     app.include_router(settings.router)
     app.include_router(vto.router)
+    app.include_router(mockup.router)
     app.include_router(events.router)
     app.include_router(health.router)
     return app

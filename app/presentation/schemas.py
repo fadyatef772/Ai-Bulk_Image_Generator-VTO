@@ -45,3 +45,15 @@ class VTOSchema(BaseModel):
     productImage: str = Field(min_length=1, description="Base64-encoded clothing/product image")
     sampleCount: int = Field(default=1, ge=1, le=4)
     baseSteps: Optional[int] = Field(default=None, ge=1, le=100)
+
+
+class MockupSchema(BaseModel):
+    """POST /api/mockup — single apparel image → ghost-mannequin 3D mockup."""
+    image: str = Field(min_length=1, description="Base64-encoded apparel image (with or without data: prefix)")
+    garmentType: str = Field(default="", description="Template: tshirt/hoodie/sweatshirt/polo/tank, or custom prompt, or empty for auto")
+
+
+class MockupBulkSchema(BaseModel):
+    """POST /api/mockup/bulk — multiple apparel images → ghost-mannequin mockups via queue."""
+    images: list[dict] = Field(description="List of {name, data} where data is base64-encoded image")
+    garmentType: str = Field(default="", description="Template applied to all images")

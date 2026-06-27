@@ -249,7 +249,7 @@ class ImageQueueService:
             self._logger.info("Processing job", {"jobId": job.id, "filename": job.original_name})
 
             image_buffer = await self._fs.read_image_as_buffer(job.original_path)
-            service = self._factory.get_service()
+            service = self._factory.get_service(job.provider)
 
             result = await asyncio.wait_for(
                 service.generate_image(
@@ -326,6 +326,7 @@ class ImageQueueService:
     def create_job(
         self, *, original_path: str, original_name: str, mime_type: str,
         file_size: int, prompt: str, job_id: Optional[str] = None,
+        provider: Optional[str] = None,
     ) -> ImageJob:
         return ImageJob(
             id=job_id or str(uuid.uuid4()),
@@ -335,5 +336,6 @@ class ImageQueueService:
             file_size=file_size,
             prompt=prompt,
             status="pending",
+            provider=provider,
             retry_count=0,
         )
