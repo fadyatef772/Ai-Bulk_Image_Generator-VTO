@@ -25,6 +25,7 @@ class ImageJob:
     file_size: int
     prompt: str
     status: JobStatus = "pending"
+    provider: Optional[str] = None  # per-job provider override (e.g. "mockup"); None = use global default
     output_path: Optional[str] = None
     error_message: Optional[str] = None
     retry_count: int = 0

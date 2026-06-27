@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  Boxes,
   ChevronLeft,
   Image as ImageIcon,
   LayoutGrid,
@@ -17,6 +18,7 @@ const NAV: { id: NavPage; label: string; icon: typeof LayoutGrid }[] = [
   { id: 'dashboard', label: 'Dashboard',         icon: LayoutGrid },
   { id: 'upload',    label: 'Upload Center',      icon: Upload     },
   { id: 'vto',       label: 'Virtual Try-On',     icon: Wand2      },
+  { id: 'mockup',    label: 'AI 3D Mockup',       icon: Boxes      },
   { id: 'queue',     label: 'Processing Queue',   icon: List       },
   { id: 'gallery',   label: 'Generated Gallery',  icon: ImageIcon  },
   { id: 'settings',  label: 'Settings',           icon: Settings   },

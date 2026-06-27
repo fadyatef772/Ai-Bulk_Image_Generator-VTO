@@ -15,6 +15,7 @@ from app.domain.entities.settings import ApiProvider
 from app.domain.interfaces import IImageGenerationService
 from app.infrastructure.providers.dust_service import DustService
 from app.infrastructure.providers.gemini_service import GeminiService
+from app.infrastructure.providers.mockup_service import MockupService
 from app.infrastructure.providers.vertex_imagen_service import VertexImagenService
 
 
@@ -23,6 +24,7 @@ class ImageGenerationServiceFactory:
         self._gemini = GeminiService(logger)
         self._vertex = VertexImagenService(logger)
         self._dust = DustService(logger)
+        self._mockup = MockupService(logger)
 
     def get_service(self, provider: Optional[ApiProvider] = None) -> IImageGenerationService:
         active = provider or os.environ.get("API_PROVIDER", "gemini")
@@ -30,6 +32,8 @@ class ImageGenerationServiceFactory:
             return self._vertex
         if active == "dust":
             return self._dust
+        if active == "mockup":
+            return self._mockup
         return self._gemini
 
     async def validate_provider(self, provider: ApiProvider) -> bool:
@@ -37,3 +41,6 @@ class ImageGenerationServiceFactory:
 
     def get_gemini_service(self) -> GeminiService:
         return self._gemini
+
+    def get_mockup_service(self) -> MockupService:
+        return self._mockup

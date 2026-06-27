@@ -5,6 +5,7 @@ import { useAppStore } from '@/store/appStore';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { UploadPage } from '@/pages/UploadPage';
 import { VirtualTryOnPage } from '@/pages/VirtualTryOnPage';
+import { MockupPage } from '@/pages/MockupPage';
 import { QueuePage } from '@/pages/QueuePage';
 import { GalleryPage } from '@/pages/GalleryPage';
 import { SettingsPage } from '@/pages/SettingsPage';
@@ -14,6 +15,7 @@ const PAGES: Record<NavPage, () => JSX.Element> = {
   dashboard: DashboardPage,
   upload:    UploadPage,
   vto:       VirtualTryOnPage,
+  mockup:    MockupPage,
   queue:     QueuePage,
   gallery:   GalleryPage,
   settings:  SettingsPage,

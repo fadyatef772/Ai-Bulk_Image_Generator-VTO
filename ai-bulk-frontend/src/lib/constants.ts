@@ -68,3 +68,13 @@ export const PROMPT_EXAMPLES = [
   'Make this look like a professional studio photograph with soft lighting',
   'Create a minimalist product photo with clean background',
 ];
+
+// ── AI 3D Apparel Ghost-Mannequin Mockup ─────────────────────────────────────
+export const GARMENT_TYPES = [
+  { value: '',           label: 'Auto (detect)' },
+  { value: 'tshirt',     label: 'T-Shirt' },
+  { value: 'hoodie',     label: 'Hoodie' },
+  { value: 'sweatshirt', label: 'Sweatshirt' },
+  { value: 'polo',       label: 'Polo Shirt' },
+  { value: 'tank',       label: 'Tank Top' },
+] as const;
