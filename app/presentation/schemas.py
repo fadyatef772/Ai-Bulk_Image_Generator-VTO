@@ -57,3 +57,24 @@ class MockupBulkSchema(BaseModel):
     """POST /api/mockup/bulk — multiple apparel images → ghost-mannequin mockups via queue."""
     images: list[dict] = Field(description="List of {name, data} where data is base64-encoded image")
     garmentType: str = Field(default="", description="Template applied to all images")
+
+
+class PipelineSchema(BaseModel):
+    """POST /api/pipeline — one product image → multiple professional angles.
+
+    Stage 1 (gemini-3.1-flash-image): front, side, back, detail
+    Stage 2: ghost_front, ghost_back (MockupService) · model (VTO, needs person)
+    Stage 3: outdoor (2-step: VTO then gemini-3.1-flash-image; needs person + outdoor)
+
+    imageFront is required. imageBack is optional (back + ghost_back).
+    personImage is required for the 'model' and 'outdoor' angles.
+    outdoorImage is OPTIONAL — if omitted, the model generates a suitable outdoor scene.
+    """
+    imageFront: str = Field(min_length=1, description="Base64 product image (front).")
+    imageBack: Optional[str] = Field(default=None, description="Base64 product image (back). Used for back + ghost_back.")
+    personImage: Optional[str] = Field(default=None, description="Base64 person image. Required for 'model' and 'outdoor'.")
+    outdoorImage: Optional[str] = Field(default=None, description="Base64 outdoor background image. Optional for 'outdoor' — if omitted, a scene is auto-generated.")
+    angles: Optional[list[str]] = Field(
+        default=None,
+        description="Angles: front, side, back, detail, ghost_front, ghost_back, model, outdoor. Omit for all.",
+    )

@@ -76,6 +76,14 @@ export const api = {
       images,
       garmentType,
     }),
+  pipeline: (body: {
+    imageFront: string; imageBack?: string;
+    personImage?: string; outdoorImage?: string; angles?: string[];
+  }) =>
+    http.post<{
+      images: Array<{ angle: string; success: boolean; image?: string; mimeType?: string; dataUrl?: string; error?: string }>;
+      totalRequested: number; totalSucceeded: number; totalFailed: number;
+    }>('/pipeline', body),
   getGallery: (q: GalleryQuery = {}) =>
     http.get<GalleryResponse>(`/images${buildGalleryQuery(q)}`),
   deleteJob: (id: string) => http.delete<{ id: string }>(`/images/${id}`),
