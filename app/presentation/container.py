@@ -23,6 +23,7 @@ from app.core.logging import Logger, get_logger
 from app.infrastructure.config.json_settings_repository import JsonSettingsRepository
 from app.infrastructure.filesystem.filesystem_service import FileSystemService
 from app.infrastructure.providers.factory import ImageGenerationServiceFactory
+from app.infrastructure.providers.production_pipeline_service import ProductionPipelineService
 from app.infrastructure.providers.vertex_vto_service import VirtualTryOnService
 from app.infrastructure.repositories.in_memory_job_repository import InMemoryImageJobRepository
 
@@ -39,6 +40,11 @@ class Container:
         self.service_factory = ImageGenerationServiceFactory(self.logger)
         self.filesystem = FileSystemService(self.logger)
         self.vto_service = VirtualTryOnService(self.logger)
+        self.pipeline_service = ProductionPipelineService(
+            self.logger,
+            mockup_service=self.service_factory.get_mockup_service(),
+            vto_service=self.vto_service,
+        )
 
         # Application
         self.queue = ImageQueueService(

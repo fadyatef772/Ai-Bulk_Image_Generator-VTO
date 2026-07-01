@@ -2,7 +2,7 @@
 
 export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
 export type ApiProvider = 'gemini' | 'vertex' | 'dust';
-export type NavPage = 'dashboard' | 'upload' | 'vto' | 'mockup' | 'queue' | 'gallery' | 'settings';
+export type NavPage = 'dashboard' | 'upload' | 'vto' | 'mockup' | 'pipeline' | 'queue' | 'gallery' | 'settings';
 
 export interface ImageJob {
   id: string;

@@ -6,6 +6,7 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { UploadPage } from '@/pages/UploadPage';
 import { VirtualTryOnPage } from '@/pages/VirtualTryOnPage';
 import { MockupPage } from '@/pages/MockupPage';
+import { ProductionPipelinePage } from '@/pages/ProductionPipelinePage';
 import { QueuePage } from '@/pages/QueuePage';
 import { GalleryPage } from '@/pages/GalleryPage';
 import { SettingsPage } from '@/pages/SettingsPage';
@@ -16,6 +17,7 @@ const PAGES: Record<NavPage, () => JSX.Element> = {
   upload:    UploadPage,
   vto:       VirtualTryOnPage,
   mockup:    MockupPage,
+  pipeline:  ProductionPipelinePage,
   queue:     QueuePage,
   gallery:   GalleryPage,
   settings:  SettingsPage,
